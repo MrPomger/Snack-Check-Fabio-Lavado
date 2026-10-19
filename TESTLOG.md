@@ -5,3 +5,4 @@
 | **TC-003** | Error (Cuerpo Vacío) | Solicitud sin parámetros | `{ "code":"" }` | Activación de la rama `False` del primer IF hacia el webhook de error de validación. | Correcto | ✅ Aprobado |
 | **TC-004** | Error (Código Desconocido) | Producto inexistente | `{ "code": "2051032135" }` | Pasa la validación inicial, la API responde 404 y se desvía al webhook `Producto no encontrado`. | Correcto | ✅ Aprobado |
 | **TC-005** | Error (Datos Nutricionales Faltantes) | Artículo de prueba sin specs | `{ "code": "3274080005003" }` | Pasa la API pero es interceptado por el nodo `IF - Verificar datos`, derivando a `Datos faltantes`. | Correcto | ✅ Aprobado |
+| **TC-006** |Funcional (Nutri-Score Unknown) | Producto con Nutri-Score ausente | `{ "barcode": "8402001022722" }` | Detecta que el Nutri-Score no está disponible, lo marca como `unknown` y calcula el veredicto final basándose exclusivamente en la evaluación del semáforo nutricional. | Correcto | ✅ Aprobado |
