@@ -1,0 +1,7 @@
+| ID de Prueba | Tipo de Prueba | Escenario / Producto | Entrada de Datos | Resultado Esperado | Resultado Obtenido | Estatus |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **TC-001** | Funcional (Código Válido) | Nutella | `{ "code": "3017620422003" }` | Pasa validación, extrae datos, calcula semáforo/Nutri-Score (E) y emite veredicto cauteloso. | Correcto | ✅ Aprobado |
+| **TC-002** | Integración (API en Vivo) | Coca-Cola | `{ "code": "5449000000996" }` | Consulta exitosa en Open Food Facts, procesa azúcar alto / Nutri-Score E y responde adecuadamente. | Correcto | ✅ Aprobado |
+| **TC-003** | Error (Cuerpo Vacío) | Solicitud sin parámetros | `{ "code":"" }` | Activación de la rama `False` del primer IF hacia el webhook de error de validación. | Correcto | ✅ Aprobado |
+| **TC-004** | Error (Código Desconocido) | Producto inexistente | `{ "code": "2051032135" }` | Pasa la validación inicial, la API responde 404 y se desvía al webhook `Producto no encontrado`. | Correcto | ✅ Aprobado |
+| **TC-005** | Error (Datos Nutricionales Faltantes) | Artículo de prueba sin specs | `{ "code": "3274080005003" }` | Pasa la API pero es interceptado por el nodo `IF - Verificar datos`, derivando a `Datos faltantes`. | Correcto | ✅ Aprobado |
