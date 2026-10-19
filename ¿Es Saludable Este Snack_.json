@@ -30,7 +30,7 @@
           "conditions": [
             {
               "id": "63cb50e5-04f5-4c1f-b638-a0b7f223f289",
-              "leftValue": "={{ $json.body.code }}",
+              "leftValue": "={{ $json.body.barcode }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -40,7 +40,7 @@
             },
             {
               "id": "5e859e83-64a4-4548-9b0d-1ec0ee6bd5ed",
-              "leftValue": "={{ $json.body.code }}",
+              "leftValue": "={{ $json.body.barcode }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -50,7 +50,7 @@
             },
             {
               "id": "d5963e4f-dde3-4890-aaf4-8b136f589ee7",
-              "leftValue": "={{ $json.body.code }}",
+              "leftValue": "={{ $json.body.barcode }}",
               "rightValue": "^[0-9]{1,14}$",
               "operator": {
                 "type": "string",
@@ -74,7 +74,7 @@
     },
     {
       "parameters": {
-        "url": "=https://world.openfoodfacts.org/api/v2/product/{{ $json.body.code }}.json?fields=product_name,brands,nutriscore_grade,nutriments",
+        "url": "=https://world.openfoodfacts.org/api/v2/product/{{ $json.body.barcode }}.json?fields=product_name,brands,nutriscore_grade,nutriments",
         "options": {
           "response": {
             "response": {
@@ -139,7 +139,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "={\n  \"Food\": {{ JSON.stringify($json.product.brands) }}\n  \"Salt\": {{ $json.product.nutriments.salt_100g }},\n  \"Fat\": {{ $json.product.nutriments.fat_100g }},\n  \"Sugar\": {{ $json.product.nutriments['added-sugars_100g'] }},\n  \"Nutri_Score\": {{ JSON.stringify($json.product.nutriscore_grade) }}\n}\n",
+        "jsonOutput": "={\n  \"Food\": {{ JSON.stringify($json.product.brands) }},\n  \"Salt\": {{ $json.product.nutriments.salt_100g }},\n  \"Fat\": {{ $json.product.nutriments.fat_100g }},\n  \"Sugar\": {{ $json.product.nutriments.sugars_100g }},\n  \"Nutri_Score\": {{ JSON.stringify($json.product.nutriscore_grade ?? 'unknown') }}\n}\n",
         "options": {}
       },
       "id": "6fa52e48-39c0-4f97-b82b-8f3c2976367e",
@@ -295,13 +295,13 @@
             {
               "id": "203a84ff-b7f6-4aae-8bc7-fe2f0e956ff4",
               "name": "Veredicto semaforo",
-              "value": "={{ $json['worry score'] >= 2 ? 'no saludable' : ($json['worry score'] === 1 ? 'moderado' : 'saludable') }}",
+              "value": "={{ Number($json['worry score']) >= 2 ? 'no saludable' : (Number($json['worry score']) === 1 ? 'moderado' : 'saludable') }}",
               "type": "string"
             },
             {
               "id": "1fc48ce0-c299-437f-8f67-fdac7a3597fd",
               "name": "Veredicto Nutri_Score",
-              "value": "={{ ['d', 'e'].includes($json.Nutri_Score.toLowerCase()) ? 'no saludable' : ($json.Nutri_Score.toLowerCase() === 'c' ? 'moderado' : 'saludable') }}",
+              "value": "={{ ['d', 'e'].includes(String($json.Nutri_Score || '').toLowerCase()) ? 'no saludable' : (String($json.Nutri_Score || '').toLowerCase() === 'c' ? 'moderado' : (['a', 'b'].includes(String($json.Nutri_Score || '').toLowerCase()) ? 'saludable' : 'unknown')) }}",
               "type": "string"
             }
           ]
@@ -324,7 +324,7 @@
             {
               "id": "22ecba53-b2d7-49ca-964f-056b01a50c92",
               "name": "Veredicto Final",
-              "value": "={{ !$json['Veredicto Nutri_Score'] || $json['Veredicto Nutri_Score'].toLowerCase() === 'unknown' ? $json['Veredicto semaforo']: ($json['Veredicto Nutri_Score'] === 'no saludable' || $json['Veredicto semaforo'] === 'no saludable' ? 'no saludable' : 'saludable') }}",
+              "value": "={{ !$json['Veredicto Nutri_Score'] || $json['Veredicto Nutri_Score'] === 'unknown' ? $json['Veredicto semaforo'] : ([$json['Veredicto Nutri_Score'], $json['Veredicto semaforo']].includes('no saludable') ? 'no saludable' : ([$json['Veredicto Nutri_Score'], $json['Veredicto semaforo']].includes('moderado') ? 'moderado' : 'saludable')) }}",
               "type": "string"
             }
           ]
@@ -351,7 +351,7 @@
         "responses": {
           "values": [
             {
-              "content": "=Actúa como un amigo experto en supermercados evaluando el producto \"{{ $('Set - Separar umbrelas nutricionales').item.json.Food }}\". \n\nINSTRUCCIÓN DE TONO DINÁMICO:\n{{ $json['Veredicto Final'] === 'no saludable' ? 'Usa un tono cauteloso con delicadeza, advirtiendo con cariño que es mejor dejarlo para un gusto ocasional.' : 'Usa un tono alentador, positivo y amigable.' }}\n\nEscribe un único párrafo corto (máximo 3 líneas) que mencione su veredicto ({{ $json['Veredicto Final'] }}), su Nutri-Score ({{ $('Set - Calcular Umbrales Nutricionales').item.json.Nutri_Score }}) y sus marcas de semáforo (Azúcar: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Azucar }}, Sal: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Sal }}, Grasa: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Grasa }}). Sin saludos ni despedidas, ve directo al grano."
+              "content": "=Actúa como un amigo experto en supermercados evaluando el producto \"{{ $('Set - Separar umbrelas nutricionales').item.json.Food }}\". \n\nINSTRUCCIÓN DE TONO DINÁMICO:\n{{ $json['Veredicto Final'] === 'no saludable' ? 'Usa un tono cauteloso con delicadeza, advirtiendo con cariño que es mejor dejarlo para un gusto ocasional.' : 'Usa un tono alentador, positivo y amigable.' }}\n\nEscribe un único párrafo corto (máximo 3 líneas) que mencione su veredicto ({{ $json['Veredicto Final'] }}), su Nutri-Score ({{ String($('Set - Calcular Umbrales Nutricionales').item.json.Nutri_Score || 'unknown').toLowerCase() === 'unknown' ? 'este producto NO tiene Nutri-Score disponible; dilo de forma natural, por ejemplo \"no cuenta con Nutri-Score\", y nunca escribas la palabra unknown' : $('Set - Calcular Umbrales Nutricionales').item.json.Nutri_Score.toUpperCase() }}) y sus marcas de semáforo (Azúcar: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Azucar }}, Sal: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Sal }}, Grasa: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Grasa }}). Sin saludos ni despedidas, ve directo al grano."
             }
           ]
         },
@@ -373,6 +373,54 @@
           "__aiGatewayManaged": true
         }
       }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e90ecd7e-b88b-4d07-a680-cc8dde1f9fde",
+              "name": "message",
+              "value": "=🛒 SnackCheck — Veredicto Nutricional\n\n📊 Valores Clave (por cada 100g):\n• Azúcar:{{ $('Set - Separar umbrelas nutricionales').item.json.Sugar }}g — {{ $('Set - Calcular Umbrales Nutricionales').item.json.Azucar }}\n• Sal: {{ $('Set - Separar umbrelas nutricionales').item.json.Salt }}g — {{ $('Set - Calcular Umbrales Nutricionales').item.json.Sal }}\n• Grasa: {{ $('Set - Separar umbrelas nutricionales').item.json.Fat }}g — {{ $('Set - Calcular Umbrales Nutricionales').item.json.Grasa }}\n• Nutri-Score: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Nutri_Score }}\n\n🎯 Veredicto: {{ $('Set - Veredicto final').item.json['Veredicto Final'] }}\n\n{{ $json.output[0].content[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d88d1557-ace5-4f79-9d8b-6e6a486eb1fa",
+      "name": "Set - Mensaje final redactado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2400,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.message }}",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/plain"
+              }
+            ]
+          }
+        }
+      },
+      "id": "74c99fe3-c168-4fd6-b1d6-77dd7e146f67",
+      "name": "Webhook - Mensaje final formateado",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2624,
+        -272
+      ]
     },
     {
       "parameters": {
@@ -421,54 +469,6 @@
       "position": [
         448,
         96
-      ]
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "e90ecd7e-b88b-4d07-a680-cc8dde1f9fde",
-              "name": "message",
-              "value": "=🛒 SnackCheck — Veredicto Nutricional\n\n📊 Valores Clave (por cada 100g):\n• Azúcar:{{ $('Set - Separar umbrelas nutricionales').item.json.Sugar }}g — {{ $('Set - Calcular Umbrales Nutricionales').item.json.Azucar }}\n• Sal: {{ $('Set - Separar umbrelas nutricionales').item.json.Salt }}g — {{ $('Set - Calcular Umbrales Nutricionales').item.json.Sal }}\n• Grasa: {{ $('Set - Separar umbrelas nutricionales').item.json.Fat }}g — {{ $('Set - Calcular Umbrales Nutricionales').item.json.Grasa }}\n• Nutri-Score: {{ $('Set - Calcular Umbrales Nutricionales').item.json.Nutri_Score }}\n\n🎯 Veredicto: {{ $('Set - Veredicto final').item.json['Veredicto Final'] }}\n\n{{ $json.output[0].content[0].text }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "d88d1557-ace5-4f79-9d8b-6e6a486eb1fa",
-      "name": "Set - Mensaje final redactado",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        2400,
-        -272
-      ]
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.message }}",
-        "options": {
-          "responseCode": 200,
-          "responseHeaders": {
-            "entries": [
-              {
-                "name": "Content-Type",
-                "value": "text/plain"
-              }
-            ]
-          }
-        }
-      },
-      "id": "74c99fe3-c168-4fd6-b1d6-77dd7e146f67",
-      "name": "Webhook - Mensaje final formateado",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        2624,
-        -272
       ]
     }
   ],
@@ -617,12 +617,12 @@
       ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "855c7561-739c-4c90-aee5-746a34a3e8ab",
+  "versionId": "26352b53-d6c2-47cd-8ff2-f02b5b1fbd5b",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "3cac4d409e9e37f34312126d7c530fdfa2b28bb418fdc89a5beb55cb3575d2e5"
