@@ -28,7 +28,7 @@ El flujo está estructurado de manera modular y secuencial, garantizando robuste
 5. **Capa de Salida:** 
    - Los nodos `Set - Mensaje final` y `Webhook - Mensaje final que devuelve` formatean la respuesta HTTP multisección con emojis y marcadores visuales.
 
-## 🛠️ Configuración
+## Configuración
 1. Importa el archivo JSON del flujo en tu espacio de trabajo de n8n.
 2. Configura tu credencial de la API de Groq en el nodo de Inteligencia Artificial.
 3. Envía peticiones POST al endpoint del webhook en Hoppscotch utilizando un cuerpo JSON:
